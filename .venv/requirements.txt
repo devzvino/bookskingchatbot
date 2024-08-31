@@ -1,6 +1,0 @@
-Flask==2.3.3                 # Flask framework for building web applications
-mysql-connector-python==8.1.0 # MySQL driver for Python to connect and interact with MySQL databases
-python-dotenv==1.0.0         # Library to load environment variables from a .env file
-openai==0.28.1               # OpenAI API client for interacting with ChatGPT
-twilio==8.0.1                # Twilio API client for sending and receiving WhatsApp messages
-weasyprint==57.3             # Library for generating PDFs from HTML (optional, if using HTML templates for invoices)

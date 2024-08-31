@@ -6,7 +6,12 @@ from invoice_bot import parse_extracted_data, check_missing_fields, create_confi
 
 # Load environment variables from .env file
 load_dotenv()
-user ='Rilpix Private Limited'
+user = {
+    "Company Name":'Rilpix Private Limited',
+    "Name":'Benard Zvinokwazvo',
+    'Email': 'ben@rilpix.com',
+    'Company Email': 'info@rilpix.com'
+}
 
 def main():
     """
@@ -16,7 +21,7 @@ def main():
 
     while True:
         # Prompt the user with options
-        print(f"Hi, {user}\nWhat would you like to create?\n1. Invoice\n2. Quotation\n3. Receipt")
+        print(f"Hi, {user['Company Name']}\nWhat would you like to create?\n1. Invoice\n2. Quotation\n3. Receipt")
         print("Type 'exit' to quit the application.")
 
         # Get user input
@@ -65,7 +70,7 @@ def get_user_confirmation(invoice_data):
         confirm = input("Your answer: ").strip().lower()
         if confirm == '1':
             # Generate the PDF invoice
-            pdf_path = generate_invoice_pdf(invoice_data)
+            pdf_path = generate_invoice_pdf(invoice_data,user)
             print(f"Invoice generated successfully. PDF saved at: {pdf_path}")
         elif confirm == '2':
             print("Invoice creation cancelled.")

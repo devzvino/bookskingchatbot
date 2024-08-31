@@ -1,8 +1,10 @@
 # invoice_bot.py
 
+from datetime import datetime
 from fpdf import FPDF
 import openai
 import os
+
 
 # Set OpenAI API key
 # openai.api_key = os.getenv('OPENAI_API_KEY')
@@ -86,6 +88,7 @@ def parse_extracted_data(extracted_data):
 
     return data
 
+
 def check_missing_fields(data):
     """
     Checks for any missing fields in the extracted invoice data.
@@ -107,6 +110,7 @@ def check_missing_fields(data):
     else:
         return None
 
+
 def create_confirmation_message(invoice_data):
     """
     Creates a confirmation message with the extracted invoice data for user review.
@@ -120,7 +124,7 @@ def create_confirmation_message(invoice_data):
     # Start building the confirmation message
     confirmation_message = (
         f"Please confirm the following invoice details:\n"
-        f"Company Name: {invoice_data.get('Company Name', 'N/A')}\n"
+        f"\nCompany Name: {invoice_data.get('Company Name', 'N/A')}\n"
         f"Client: {invoice_data.get('Client', 'N/A')}\n"
         f"Date: {invoice_data.get('Date', 'N/A')}\n"
         "Invoice Items:\n"
@@ -143,12 +147,12 @@ def create_confirmation_message(invoice_data):
         f"Discounts: {invoice_data.get('Discounts', 'N/A')}\n"
         f"Terms: {invoice_data.get('Terms', 'N/A')}\n"
         f"Banking Details: {invoice_data.get('Banking Details', 'N/A')}\n"
-        "If everything is correct type '1'. Otherwise type '2', and start over."
     )
 
     return confirmation_message
 
-def generate_invoice_pdf(data):
+
+def generate_invoice_pdf(data, user):
     """
     Generates a PDF invoice based on the provided data.
 
@@ -157,30 +161,55 @@ def generate_invoice_pdf(data):
 
     Returns:
         str: The file path of the generated PDF invoice.
+        :param data:
+        :param user:
     """
+    print(data)
+    # Initialize subtotal
+    subtotal = 0.0
+    invoice_items = data['Invoice Items']
+    # Print out each amount to verify correctness
+
+    for item in invoice_items:
+        subtotal += item['Amount']
+
+    # Calculate subtotal, discount, tax, and total
+    print(subtotal)
+    print(data['Invoice Items'])
+
+    discount = subtotal * (data['Discounts']/100)
+    print(discount)
+    tax = (subtotal - discount) * (data['Tax']/100)
+
+    total = (subtotal - discount) + tax
+
     # Create a new PDF object
+    # Create PDF
+
     pdf = FPDF()
     pdf.add_page()
 
-    # Set the title and add company, client, and date details
-    pdf.set_font("Arial", 'B', 16)
+    pdf.set_font("Arial", size=12)
     pdf.cell(200, 10, txt="Invoice", ln=True, align='C')
 
-    pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt=f"Company Name: {data['Company Name']}", ln=True)
+    pdf.cell(200, 10, txt=f"Company: {user['Company Name']}", ln=True)
     pdf.cell(200, 10, txt=f"Client: {data['Client']}", ln=True)
     pdf.cell(200, 10, txt=f"Date: {data['Date']}", ln=True)
 
-    # List all invoice items
-    pdf.cell(200, 10, txt="Invoice Items:", ln=True)
+    pdf.cell(200, 10, txt="Items:", ln=True)
     for item in data['Invoice Items']:
-        pdf.cell(200, 10, txt=f"{item.get('Description', 'N/A')} - {item.get('Quantity', '')} - ${item.get('Amount', 'N/A')}", ln=True)
+        pdf.cell(200, 10, txt=f"{item['Description']}: ${item['Amount']:.2f}", ln=True)
 
-    # Add tax, discounts, terms, and banking details
-    pdf.cell(200, 10, txt=f"Tax: {data['Tax']}", ln=True)
-    pdf.cell(200, 10, txt=f"Discounts: {data['Discounts']}", ln=True)
+    pdf.cell(200, 10, txt=f"Subtotal: ${ subtotal:.2f}", ln=True)
+    pdf.cell(200, 10, txt=f"Discount (10%): -${data['Discounts']:.2f}", ln=True)
+    pdf.cell(200, 10, txt=f"Tax (5%): +${data['Tax']:.2f}", ln=True)
+    pdf.cell(200, 10, txt=f"Total: ${total:.2f}", ln=True)
+
     pdf.cell(200, 10, txt=f"Terms: {data['Terms']}", ln=True)
-    pdf.cell(200, 10, txt=f"Banking Details: {data['Banking Details']}", ln=True)
+    pdf.cell(200, 10, txt="Banking Details:", ln=True)
+    pdf.cell(200, 10, txt=f"Bank: {data['Banking Details']}", ln=True)
+    # pdf.cell(200, 10, txt=f"Account Number: {banking_details['Account Number']}", ln=True)
+    # pdf.cell(200, 10, txt=f"Routing Number: {banking_details['Routing Number']}", ln=True)
 
     # Define the file path for the PDF
     pdf_file = 'invoice.pdf'
